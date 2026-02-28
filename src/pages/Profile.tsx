@@ -1,9 +1,51 @@
-import { useState } from "react";
-import { User, Mail, Award, Shield, Settings, LogOut, BookOpen, Activity } from "lucide-react";
+import { useState, useRef } from "react";
+import { User, Mail, Award, Shield, Settings, LogOut, BookOpen, Activity, Camera } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [profileData, setProfileData] = useState({
+    name: "Young Guru",
+    email: "young.guru@example.com",
+    role: "Học sinh THPT",
+    school: "THPT Trọng điểm",
+    goal: "Thi HSG Quốc gia Sinh học",
+    joinDate: "Tháng 9, 2023",
+    avatar: ""
+  });
+
+  const [editData, setEditData] = useState({ ...profileData });
+
+  const handleSave = () => {
+    setProfileData({ ...editData });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditData({ ...profileData });
+    setIsEditing(false);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setEditData({ ...editData, avatar: imageUrl });
+      if (!isEditing) {
+        setProfileData({ ...profileData, avatar: imageUrl });
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      navigate("/");
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -18,25 +60,85 @@ export default function Profile() {
         <div className="h-32 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
         <div className="px-6 sm:px-8 pb-8">
           <div className="relative flex justify-between items-end -mt-12 mb-6">
-            <div className="w-24 h-24 rounded-full border-4 border-white bg-emerald-100 flex items-center justify-center text-emerald-700 text-3xl font-bold shadow-md">
-              YG
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full border-4 border-white bg-emerald-100 flex items-center justify-center text-emerald-700 text-3xl font-bold shadow-md overflow-hidden">
+                {(isEditing ? editData.avatar : profileData.avatar) ? (
+                  <img src={isEditing ? editData.avatar : profileData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  profileData.name.substring(0, 2).toUpperCase()
+                )}
+              </div>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-sm border border-slate-200 text-slate-600 hover:text-emerald-600 transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleAvatarChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
-            <button 
-              onClick={() => setIsEditing(!isEditing)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-200 transition-colors"
-            >
-              {isEditing ? "Lưu thay đổi" : "Chỉnh sửa hồ sơ"}
-            </button>
+            <div className="flex space-x-2">
+              {isEditing ? (
+                <>
+                  <button 
+                    onClick={handleCancel}
+                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-200 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button 
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+                  >
+                    Lưu thay đổi
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-200 transition-colors"
+                >
+                  Chỉnh sửa hồ sơ
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2 space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Young Guru</h2>
-                <p className="text-slate-500 flex items-center mt-1">
-                  <Mail className="w-4 h-4 mr-2" />
-                  young.guru@example.com
-                </p>
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <input 
+                      type="text" 
+                      value={editData.name} 
+                      onChange={(e) => setEditData({...editData, name: e.target.value})}
+                      className="text-xl font-bold text-slate-900 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    />
+                    <div className="flex items-center">
+                      <Mail className="w-4 h-4 mr-2 text-slate-400" />
+                      <input 
+                        type="email" 
+                        value={editData.email} 
+                        onChange={(e) => setEditData({...editData, email: e.target.value})}
+                        className="text-slate-600 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-bold text-slate-900">{profileData.name}</h2>
+                    <p className="text-slate-500 flex items-center mt-1">
+                      <Mail className="w-4 h-4 mr-2" />
+                      {profileData.email}
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -44,19 +146,46 @@ export default function Profile() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-xs text-slate-500 block mb-1">Vai trò</span>
-                    <span className="font-medium text-slate-900">Học sinh THPT</span>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={editData.role} 
+                        onChange={(e) => setEditData({...editData, role: e.target.value})}
+                        className="font-medium text-slate-900 w-full p-1.5 border border-slate-200 rounded-md text-sm"
+                      />
+                    ) : (
+                      <span className="font-medium text-slate-900">{profileData.role}</span>
+                    )}
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-xs text-slate-500 block mb-1">Trường</span>
-                    <span className="font-medium text-slate-900">THPT Trọng điểm</span>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={editData.school} 
+                        onChange={(e) => setEditData({...editData, school: e.target.value})}
+                        className="font-medium text-slate-900 w-full p-1.5 border border-slate-200 rounded-md text-sm"
+                      />
+                    ) : (
+                      <span className="font-medium text-slate-900">{profileData.school}</span>
+                    )}
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-xs text-slate-500 block mb-1">Mục tiêu</span>
-                    <span className="font-medium text-slate-900">Thi HSG Quốc gia Sinh học</span>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={editData.goal} 
+                        onChange={(e) => setEditData({...editData, goal: e.target.value})}
+                        className="font-medium text-slate-900 w-full p-1.5 border border-slate-200 rounded-md text-sm"
+                      />
+                    ) : (
+                      <span className="font-medium text-slate-900">{profileData.goal}</span>
+                    )}
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-xs text-slate-500 block mb-1">Ngày tham gia</span>
-                    <span className="font-medium text-slate-900">Tháng 9, 2023</span>
+                    <span className="font-medium text-slate-900">{profileData.joinDate}</span>
                   </div>
                 </div>
               </div>
@@ -103,7 +232,7 @@ export default function Profile() {
                 <button className="w-full flex items-center justify-between p-3 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
                   <span className="flex items-center"><Settings className="w-4 h-4 mr-2 text-slate-400" /> Cài đặt tài khoản</span>
                 </button>
-                <button className="w-full flex items-center justify-between p-3 text-sm font-medium text-rose-700 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition-colors">
+                <button onClick={handleLogout} className="w-full flex items-center justify-between p-3 text-sm font-medium text-rose-700 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition-colors">
                   <span className="flex items-center"><LogOut className="w-4 h-4 mr-2 text-rose-500" /> Đăng xuất</span>
                 </button>
               </div>
