@@ -95,7 +95,8 @@ Chỉ tạo tối đa 4-5 nhánh con (children) để dễ hiển thị.`;
         config: { responseMimeType: "application/json" }
       });
 
-      const data = JSON.parse(response.text || "{}");
+      const text = response.text?.replace(/```json/gi, '')?.replace(/```/g, '')?.trim() || "{}";
+      const data = JSON.parse(text);
       if (data.id && data.label) {
         setMindmapData(data);
       }
@@ -153,7 +154,8 @@ Trả về ĐÚNG định dạng JSON mảng các chủ đề:
         config: { responseMimeType: "application/json" }
       });
 
-      const data = JSON.parse(response.text || "[]");
+      const text = response.text?.replace(/```json/gi, '')?.replace(/```/g, '')?.trim() || "[]";
+      const data = JSON.parse(text);
       if (Array.isArray(data) && data.length > 0) {
         // Ensure IDs are strings
         const updatedData = data.map((item, index) => ({
